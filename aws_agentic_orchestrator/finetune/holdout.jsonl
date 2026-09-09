@@ -1,0 +1,60 @@
+{"a": "compare regions on revenue", "b": "side by side regional sales", "label": 1}
+{"a": "which accounts grew the most", "b": "customers with the largest revenue increase", "label": 1}
+{"a": "revenue per part line", "b": "sales for each product line", "label": 1}
+{"a": "revenue by manufacturer", "b": "sales for each manufacturer", "label": 1}
+{"a": "part revenue by quarter", "b": "quarterly sales for each item", "label": 1}
+{"a": "is revenue up or down this quarter", "b": "did sales rise or fall this quarter", "label": 1}
+{"a": "lowest average order value by region", "b": "region with the smallest AOV", "label": 1}
+{"a": "revenue by order date month", "b": "monthly sales based on when orders were placed", "label": 1}
+{"a": "accounts with falling revenue", "b": "customers whose spend is dropping", "label": 1}
+{"a": "order count by ship mode", "b": "how many orders went out by each shipping method", "label": 1}
+{"a": "revenue by nation", "b": "sales for each country", "label": 1}
+{"a": "revenue in January", "b": "January sales total", "label": 1}
+{"a": "revenue by part type", "b": "sales totals for each product type", "label": 1}
+{"a": "fulfilled versus open orders", "b": "completed orders compared with outstanding ones", "label": 1}
+{"a": "tax collected by nation", "b": "tax amount for each country", "label": 1}
+{"a": "top parts within each segment", "b": "best selling items for every market segment", "label": 1}
+{"a": "revenue above one million", "b": "accounts with sales over a million dollars", "label": 1}
+{"a": "revenue in the previous fiscal year", "b": "last FY sales", "label": 1}
+{"a": "average order value by region", "b": "mean order size in each region", "label": 1}
+{"a": "count of orders by region", "b": "how many orders did each region place", "label": 1}
+{"a": "how many line items per order", "b": "count of lines on each order", "label": 1}
+{"a": "average order value by month", "b": "monthly AOV", "label": 1}
+{"a": "large size parts revenue", "b": "sales of the biggest item sizes", "label": 1}
+{"a": "top five segments by revenue", "b": "five biggest market segments in sales", "label": 1}
+{"a": "revenue from the Americas region", "b": "how much America brought in", "label": 1}
+{"a": "which parts have the thinnest margins", "b": "items with the lowest profitability", "label": 1}
+{"a": "rank nations by revenue", "b": "order countries from highest to lowest sales", "label": 1}
+{"a": "line items shipped per day", "b": "daily shipment line volume", "label": 1}
+{"a": "order counts by nation", "b": "how many orders each country placed", "label": 1}
+{"a": "dollars booked in each market segment", "b": "revenue recorded per segment", "label": 1}
+{"a": "revenue by region", "b": "sales totals for each region", "label": 1}
+{"a": "average quantity per order", "b": "typical units on an order", "label": 1}
+{"a": "customer count by market segment", "b": "how many customers in each segment", "label": 1}
+{"a": "cost of goods by part type", "b": "COGS for each product type", "label": 1}
+{"a": "how many customers do we have", "b": "total customer count", "label": 1}
+{"a": "shipments by month", "b": "monthly shipping volume", "label": 1}
+{"a": "total discounts given", "b": "sum of all discounts applied", "label": 1}
+{"a": "which part drives the most revenue", "b": "highest grossing part", "label": 1}
+{"a": "on time delivery rate by region", "b": "percentage of orders delivered on schedule per region", "label": 1}
+{"a": "domestic versus international revenue", "b": "sales within the same nation compared with across nations", "label": 1}
+{"a": "last 30 days of orders", "b": "last 90 days of orders", "label": 0}
+{"a": "revenue by segment and region", "b": "revenue by segment and quarter", "label": 0}
+{"a": "top customers by revenue", "b": "top market segments by revenue", "label": 0}
+{"a": "above average revenue accounts", "b": "below average revenue accounts", "label": 0}
+{"a": "full year revenue by segment", "b": "Q3 revenue by segment", "label": 0}
+{"a": "number of customers by region", "b": "revenue by region", "label": 0}
+{"a": "total order count this quarter", "b": "total revenue this quarter", "label": 0}
+{"a": "last month's revenue", "b": "last quarter's revenue", "label": 0}
+{"a": "sales by nation", "b": "sales by part type", "label": 0}
+{"a": "quarter over quarter growth", "b": "year over year growth", "label": 0}
+{"a": "part types gaining share", "b": "part types losing share", "label": 0}
+{"a": "sales in the first three months", "b": "sales in the last three months", "label": 0}
+{"a": "return rate by segment", "b": "returned revenue by segment", "label": 0}
+{"a": "highest revenue segment", "b": "lowest revenue segment", "label": 0}
+{"a": "revenue by month", "b": "revenue by year", "label": 0}
+{"a": "total discounts by segment", "b": "total revenue by segment", "label": 0}
+{"a": "year to date sales", "b": "prior year sales", "label": 0}
+{"a": "units per order by segment", "b": "revenue per order by segment", "label": 0}
+{"a": "revenue by nation", "b": "revenue by region", "label": 0}
+{"a": "average order value by region", "b": "total revenue by region", "label": 0}

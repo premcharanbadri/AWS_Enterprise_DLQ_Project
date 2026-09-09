@@ -7,3 +7,4 @@ langgraph>=0.2,<0.5
 snowflake-connector-python>=3.0,<4.0
 peft>=0.7.0
 torch
+datasets
