@@ -1,94 +1,149 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System 4: AWS Agentic Orchestrator</title>
-    <style>
-        body {
-            font-family: system-ui, sans-serif;
-            color: #333;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 50px 20px;
-            background-color: #f9f9f9;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 50px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border: 1px solid #ffffff;
-        }
-        h1 {
-            color: #24292e;
-            border-bottom: 2px solid #eaecef;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }
-        h2 {
-            color: #0066CC;
-            margin-top: 40px;
-            border-bottom: 1px solid #eaecef;
-            padding-bottom: 5px;
-        }
-        h3 {
-            color: #0066CC;
-            margin-top: 25px;
-        }
-        p {
-            margin-bottom: 16px;
-        }
-        ul {
-            margin-bottom: 20px;
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 8px;
-        }
-        .highlight {
-            background-color: #f1f8ff;
-            padding: 15px;
-            border-left: 4px solid #0066CC;
-            border-radius: 4px;
-            margin: 20px 0;
-        }
-    </style>
-</head>
-<body>
+<h1 id="-system-4-aws-agentic-orchestrator-https-premcharanbadri-github-io-aws_enterprise_project-aws_agentic_orchestrator-index_agent-html-"><a href="https://premcharanbadri.github.io/AWS_Enterprise_Project/aws_agentic_orchestrator/index_agent.html">System 4: AWS Agentic Orchestrator</a></h1>
+<h3 id="a-stateful-langgraph-agent-over-snowflake-with-a-lora-fine-tuned-semantic-cache">A stateful LangGraph agent over Snowflake with a LoRA fine-tuned semantic cache</h3>
+<table border="0">
+  <tr>
+    <td align="center"><h3>AWS Orchestrator</h3></td>
+    <td align="center"><h3>Fine-tuned (LoRA) pipeline</h3></td>
+  </tr>
+  <tr>
+    <td><img width="430" height="725" alt="image" src="https://github.com/user-attachments/assets/9a1444ed-aabe-48b9-b0ad-7521ec1848d6" /></td>
+    <td><img width="430" height="725" alt="image" src="https://github.com/user-attachments/assets/607f16bc-912d-4a08-889c-7bd7bc85386f" /></td>
+  </tr>
+</table>
 
-    <div class="container">
-        <h1>System 4: AWS Agentic Orchestrator</h1>
-        
-        <h2>1. What this actually does</h2>
-        <p>This is not a simple AI chatbot. It is the plumbing you need to run an AI agent against real company data. When an employee asks something like "what's our revenue by segment," the agent checks a local cache first. If nobody has asked that question before, it runs an analytical query against Snowflake's TPC-H sample data and hands back the numbers.</p>
-        <p>The cache is there so we don't pay to do the same work twice. Before the agent runs a fresh query, it checks a "Semantic Cache." If someone already asked a question that means the same thing, it returns the saved answer right away instead of going back to Snowflake.</p>
 
-        <h2>2. Why I built it</h2>
-        <p>Deploying AI agents in the enterprise has three massive bottlenecks: statefulness, cost, and data privacy. A standard Python AI script treats every call as a stateless, instantaneous event. If the script takes three minutes to run and the network drops, you lose all progress. Furthermore, if 5,000 employees trigger agents that each make 20 underlying API calls to external models, your token bill goes through the roof, and you risk leaking unmasked corporate data outside your firewall.</p>
-        <p>I built this to solve the plumbing around an agent: keeping its state, cutting its cost, and keeping the data private. The goal was to take a throwaway AI script and give it the structure you'd want before running it for real.</p>
-
-        <h2>3. The System logic (Why I picked these tools)</h2>
-        
-        <h3>LangGraph for Statefulness (with Step Functions in mind)</h3>
-        <p>Agents run in loops. If the process restarts halfway through a task, the agent normally loses everything. To handle that, I built the agent as a LangGraph state machine with a checkpointer, so it saves its state after every step and can pick up where it left off. Right now the checkpointer runs in memory, which is enough for the local build. The same interface is meant to sit behind a durable store like DynamoDB, with AWS Step Functions driving the loop, once it runs in production.</p>
-
-        <h3>Local Embeddings over OpenAI Embeddings</h3>
-        <p>To figure out if two questions are similar, you turn them into math (vectors) and compare them. Most developers just send the text to OpenAI's embedding API. In an enterprise, sending unmasked queries to a third party violates strict compliance boundaries. I chose to run a lightweight, open-source embedding model (<code>all-MiniLM-L6-v2</code>) on the machine itself instead. The text never gets sent to a third party. Running it locally now also maps cleanly onto running it inside a private VPC later, where the data would stay inside your own network.</p>
-
-        <h3>Redis for the Semantic Cache</h3>
-        <p>Comparing vectors quickly needs an in-memory datastore rather than slow, disk-based searches on a relational database. I used Redis for this, storing the vectors and scanning them with cosine similarity so repeated questions get caught fast. Locally that's just a Redis instance; in production the same setup would run on Amazon ElastiCache.</p>
-
-        <h2>4. Real-world bugs I had to fix</h2>
-        <p>Tuning an AI system for production is a balancing act. During local integration testing, I ran into a critical semantic tuning issue:</p>
-        <ul>
-            <li><strong>Threshold Strictness:</strong> My initial semantic cache was failing to intercept identical intents. A prompt asking for "Q3 revenue" and a prompt asking for "third quarter revenue" were registering as a Cache Miss. The mathematical similarity score generated by the compressed local model was hovering around 0.79, but my intercept threshold was hardcoded to a strict 0.85.</li>
-            <li><strong>The Fix:</strong> I had to build observability logs into the cosine similarity calculation to expose the raw spatial math. Based on the output, I lowered the threshold to 0.75. This single mathematical adjustment caught the semantic matches, saving a 10-second external network call and the associated token cost on every subsequent hit.</li>
-        </ul>
-
-        <h2>5. The Bottom Line</h2>
-        <p>This AWS Agentic Orchestrator makes AI safe for enterprise scale. By intercepting redundant requests before they cross the network perimeter, we drive external API transaction costs to near zero. Keeping the embedding and cache lookups local means the queries never leave your own environment, which is the kind of thing that matters for SOC2 and GDPR. And by saving the execution state after each step, the agent can survive a restart instead of losing its progress.</p>
-    </div>
-
-</body>
-</html>
+<h2 id="1-what-this-actually-does">1. What this actually does</h2>
+<p>This is not a simple AI chatbot. It is the plumbing you need to run an AI agent against real company data. When an employee asks something like &quot;what&#39;s our revenue by segment,&quot; the agent checks a local cache first. If nobody has asked that question before, it runs an analytical query against Snowflake&#39;s TPC-H sample data and hands back the numbers.</p>
+<p>The cache is there so we don&#39;t pay to do the same work twice. Before the agent runs a fresh query, it checks a &quot;Semantic Cache.&quot; If someone already asked a question that means the same thing, it returns the saved answer right away instead of going back to Snowflake.</p>
+<h2 id="2-why-i-built-it">2. Why I built it</h2>
+<p>Deploying AI agents in the enterprise has three massive bottlenecks: statefulness, cost, and data privacy. A standard Python AI script treats every call as a stateless, instantaneous event. If the script takes three minutes to run and the network drops, you lose all progress. Furthermore, if 5,000 employees trigger agents that each make 20 underlying API calls to external models, your token bill goes through the roof, and you risk leaking unmasked corporate data outside your firewall.</p>
+<p>I built this to solve the plumbing around an agent: keeping its state, cutting its cost, and keeping the data private. The goal was to take a throwaway AI script and give it the structure you&#39;d want before running it for real.</p>
+<h2 id="3-the-system-logic-why-i-picked-these-tools-">3. The System logic (Why I picked these tools)</h2>
+<h3 id="langgraph-for-statefulness-with-step-functions-in-mind-">LangGraph for Statefulness (with Step Functions in mind)</h3>
+<p>Agents run in loops. If the process restarts halfway through a task, the agent normally loses everything. To handle that, I built the agent as a LangGraph state machine with a checkpointer, so it saves its state after every step and can pick up where it left off. Right now the checkpointer runs in memory, which is enough for the local build. The same interface is meant to sit behind a durable store like DynamoDB, with AWS Step Functions driving the loop, once it runs in production.</p>
+<h3 id="local-embeddings-over-openai-embeddings">Local Embeddings over OpenAI Embeddings</h3>
+<p>To figure out if two questions are similar, you turn them into math (vectors) and compare them. Most developers just send the text to OpenAI&#39;s embedding API. In an enterprise, sending unmasked queries to a third party violates strict compliance boundaries. I chose to run a lightweight, open-source embedding model (<code>all-MiniLM-L6-v2</code>) on the machine itself instead. The text never gets sent to a third party. Running it locally now also maps cleanly onto running it inside a private VPC later, where the data would stay inside your own network.</p>
+<p>Section 5 covers fine-tuning this model on domain-specific query pairs.</p>
+<h3 id="redis-for-the-semantic-cache">Redis for the Semantic Cache</h3>
+<p>Comparing vectors quickly needs an in-memory datastore rather than slow, disk-based searches on a relational database. I used Redis for this, storing the vectors and scanning them with cosine similarity so repeated questions get caught fast. Locally that&#39;s just a Redis instance; in production the same setup would run on Amazon ElastiCache.</p>
+<h2 id="4-real-world-bugs-i-had-to-fix">4. Real-world bugs I had to fix</h2>
+<p>Tuning an AI system for production is a balancing act. During local integration testing, I ran into a critical semantic tuning issue:</p>
+<p><strong>Threshold Strictness.</strong> My initial semantic cache was failing to intercept identical intents. A prompt asking for &quot;Q3 revenue&quot; and a prompt asking for &quot;third quarter revenue&quot; were registering as a Cache Miss. The mathematical similarity score generated by the compressed local model was hovering around 0.79, but my intercept threshold was hardcoded to a strict 0.85.</p>
+<p><strong>The Fix.</strong> I built observability logs into the cosine similarity calculation to expose the raw spatial math. Based on the output, I lowered the threshold to 0.75. This caught the semantic matches, saving a 10-second external network call and the associated token cost on every subsequent hit.</p>
+<p><strong>The deeper problem.</strong> Lowering the threshold worked, but it was a blunt instrument. Dropping from 0.85 to 0.75 loosens matching for <em>every</em> query, not just the paraphrases I wanted to catch, which raises the risk of returning a cached answer to a question that only looks similar. The real issue was upstream: the base encoder, trained on general web text, does not place business-analytics paraphrases close together in vector space.</p>
+<p>Section 5 is what I did about that.</p>
+<h2 id="5-fine-tuning-the-encoder">5. Fine-tuning the encoder</h2>
+<p>Rather than keep the loosened threshold, I fine-tuned the encoder on the kind of language this cache actually sees.</p>
+<h3 id="the-data">The data</h3>
+<p>384 labelled query pairs built against the TPC-H vocabulary — market segment, region, order volume, revenue, customer:</p>
+<ul>
+<li><strong>300 positives</strong> — same intent, different words. <em>&quot;Q3 revenue by market segment&quot;</em> / <em>&quot;third quarter revenue broken out by segment&quot;</em></li>
+<li><strong>84 hard negatives</strong> — near-identical wording, different meaning. <em>&quot;Q3 revenue by segment&quot;</em> / <em>&quot;Q3 order counts by segment&quot;</em></li>
+</ul>
+<p>60 pairs (40 positive, 20 negative) were held out before training. Training used the remaining 324.</p>
+<p>The hard negatives are the point. A cache that matches too eagerly returns a <em>wrong</em> cached answer, which is worse than a cache miss.</p>
+<h3 id="what-the-base-model-was-actually-doing">What the base model was actually doing</h3>
+<p>Before any training, on the held-out set:</p>
+<pre><code><span class="hljs-selector-tag">mean</span> <span class="hljs-selector-tag">similarity</span>, <span class="hljs-selector-tag">positives</span>:  0<span class="hljs-selector-class">.606</span>
+<span class="hljs-selector-tag">mean</span> <span class="hljs-selector-tag">similarity</span>, <span class="hljs-selector-tag">negatives</span>:  0<span class="hljs-selector-class">.723</span>
+<span class="hljs-selector-tag">gap</span>:                        <span class="hljs-selector-tag">-0</span><span class="hljs-selector-class">.117</span>
+</code></pre><p>The base model scored near-miss queries <strong>higher</strong> than true paraphrases. This is why no threshold worked: the ordering itself was wrong. Paraphrases share intent but little vocabulary; near-misses share almost all their vocabulary and differ in one decisive word. A general-purpose encoder keys on surface overlap.</p>
+<p>No amount of threshold tuning fixes an inverted ranking.</p>
+<h3 id="method">Method</h3>
+<p>LoRA via <code>peft</code>, applied to the query/key/value projections of <code>all-MiniLM-L6-v2</code>, trained with <code>CosineSimilarityLoss</code> so both labels contribute — positives pulled toward 1.0, negatives pushed toward 0.0.</p>
+<pre><code>trainable <span class="hljs-keyword">params</span>: <span class="hljs-number">221</span>,<span class="hljs-number">184</span> || <span class="hljs-literal">all</span> <span class="hljs-keyword">params</span>: <span class="hljs-number">22</span>,<span class="hljs-number">934</span>,<span class="hljs-number">400</span> || trainable%: <span class="hljs-number">0.9644</span>
+</code></pre><p>Rank 16, alpha 32, dropout 0.05, LR 3e-4, 20 epochs, batch size 16. Final training loss 0.117. Adapter merged into the base weights before saving so the checkpoint loads as an ordinary SentenceTransformer.</p>
+<p>Full fine-tuning would have been cheap on a 22M-parameter model. LoRA is the pattern that scales: base weights stay shared and adapters can be swapped per domain.</p>
+<p>An earlier run used <code>MultipleNegativesRankingLoss</code>, which trains on positives only and generates negatives from within the batch. It barely moved the weights (max embedding delta 0.001) because the in-batch random negatives were far easier than the hard negatives that were causing the problem. Switching to a loss that sees the negative labels directly is what made the difference.</p>
+<h3 id="results">Results</h3>
+<p>Held-out set, 40 positives and 20 negatives:</p>
+<pre><code>                <span class="hljs-selector-tag">mean</span> <span class="hljs-selector-tag">sim</span> (<span class="hljs-selector-tag">pos</span>)   <span class="hljs-selector-tag">mean</span> <span class="hljs-selector-tag">sim</span> (<span class="hljs-selector-tag">neg</span>)    <span class="hljs-selector-tag">gap</span>
+<span class="hljs-selector-tag">base</span>                 0<span class="hljs-selector-class">.606</span>            0<span class="hljs-selector-class">.723</span>       <span class="hljs-selector-tag">-0</span><span class="hljs-selector-class">.117</span>
+<span class="hljs-selector-tag">fine-tuned</span>           0<span class="hljs-selector-class">.839</span>            0<span class="hljs-selector-class">.682</span>       +0<span class="hljs-selector-class">.157</span>
+</code></pre><p>The ordering reversed. Threshold sweep:</p>
+<table>
+<thead>
+<tr>
+<th>Threshold</th>
+<th>Base hit</th>
+<th>Base false</th>
+<th>Fine-tuned hit</th>
+<th>Fine-tuned false</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.70</td>
+<td>27.5%</td>
+<td>65.0%</td>
+<td>87.5%</td>
+<td>60.0%</td>
+</tr>
+<tr>
+<td>0.72</td>
+<td>22.5%</td>
+<td>60.0%</td>
+<td>87.5%</td>
+<td>55.0%</td>
+</tr>
+<tr>
+<td>0.74</td>
+<td>12.5%</td>
+<td>50.0%</td>
+<td>87.5%</td>
+<td>55.0%</td>
+</tr>
+<tr>
+<td><strong>0.76</strong></td>
+<td><strong>10.0%</strong></td>
+<td><strong>40.0%</strong></td>
+<td><strong>87.5%</strong></td>
+<td><strong>40.0%</strong></td>
+</tr>
+<tr>
+<td>0.78</td>
+<td>5.0%</td>
+<td>30.0%</td>
+<td>80.0%</td>
+<td>40.0%</td>
+</tr>
+<tr>
+<td>0.80</td>
+<td>5.0%</td>
+<td>30.0%</td>
+<td>75.0%</td>
+<td>40.0%</td>
+</tr>
+<tr>
+<td>0.82</td>
+<td>2.5%</td>
+<td>25.0%</td>
+<td>67.5%</td>
+<td>40.0%</td>
+</tr>
+<tr>
+<td>0.85</td>
+<td>0.0%</td>
+<td>10.0%</td>
+<td>62.5%</td>
+<td>35.0%</td>
+</tr>
+</tbody>
+</table>
+<p>At a matched 40% false-match rate (threshold 0.76), hit rate goes from <strong>10% to 87.5%</strong>.</p>
+<p>The base model only reaches an acceptable-looking 10% false-match rate at 0.85, where it catches nothing at all. That is not an operating point; it is a model rejecting everything.</p>
+<h3 id="what-this-does-not-claim">What this does not claim</h3>
+<p>A 40% false-match rate is too high for production. Two reasons to read these numbers as directional rather than deployment-ready:</p>
+<ul>
+<li>The negative holdout is 20 pairs, so each false match moves the rate by 5 points.</li>
+<li>The negatives are deliberately adversarial — single-word substitutions of metric, dimension, or time period. Real user queries are not uniformly this hard.</li>
+</ul>
+<p>The next step is a larger and more varied negative set, a bigger holdout, and threshold selection against production traffic rather than a synthetic benchmark.</p>
+<h3 id="reproducing">Reproducing</h3>
+<pre><code class="lang-bash"><span class="hljs-keyword">python</span> finetune/train_encoder.<span class="hljs-keyword">py</span>   # writes models/query-encoder-v1
+<span class="hljs-keyword">python</span> finetune/evaluate.<span class="hljs-keyword">py</span>        # base <span class="hljs-keyword">vs</span> fine-tuned <span class="hljs-keyword">on</span> the holdout
+</code></pre>
+<p><code>PrivacyAwareCache</code> loads <code>models/query-encoder-v1</code> if it exists and falls back to the base model otherwise, so the project runs either way.</p>
+<h2 id="6-the-bottom-line">6. The Bottom Line</h2>
+<p>This AWS Agentic Orchestrator makes AI safe for enterprise scale. By intercepting redundant requests before they cross the network perimeter, we drive external API transaction costs to near zero. Keeping the embedding and cache lookups local means the queries never leave your own environment, which is the kind of thing that matters for SOC2 and GDPR. And by saving the execution state after each step, the agent can survive a restart instead of losing its progress.</p>
+<p>The fine-tuning work in Section 5 is the difference between a cache that technically works and one that catches the paraphrases people actually type.</p>
