@@ -12,6 +12,11 @@ logger = logging.getLogger(__name__)
 CACHE_PREFIX = "aws:cache:"
 CACHE_TTL_SECONDS = 86400
 
+# Fine-tuned encoder 'if present', base model otherwise, so the project
+# still runs for cloning the repo without the checkpoint.
+BASE_MODEL = "all-MiniLM-L6-v2"
+ENCODER_PATH = os.environ.get("ENCODER_PATH", "models/query-encoder-v1")
+
 
 class PrivacyAwareCache:
     def __init__(self, redis_host="localhost", redis_port=6379, threshold=0.75):
@@ -26,10 +31,15 @@ class PrivacyAwareCache:
         )
         self.threshold = threshold
 
-        # Load a local model so confidential data never leaves the VPC for embedding.
-        logger.info("Loading local embedding model...")
-        self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
-        self.vector_dim = 384
+        # Load locally so confidential data never leaves the VPC for embedding.
+        if os.path.isdir(ENCODER_PATH):
+            logger.info(f"Loading fine-tuned encoder from {ENCODER_PATH}")
+            self.encoder = SentenceTransformer(ENCODER_PATH)
+        else:
+            logger.info(f"Fine-tuned encoder not found at {ENCODER_PATH}; "
+                        f"falling back to base model {BASE_MODEL}.")
+            self.encoder = SentenceTransformer(BASE_MODEL)
+        self.vector_dim = self.encoder.get_sentence_embedding_dimension()
 
     def _generate_embedding(self, text: str) -> np.ndarray:
         """Generates embeddings strictly on local hardware."""
