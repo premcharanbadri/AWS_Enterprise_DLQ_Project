@@ -1,4 +1,16 @@
-# System 4: AWS Agentic Orchestrator
+# [System 4: AWS Agentic Orchestrator with Fine-tuning (LoRA)](https://premcharanbadri.github.io/AWS_Enterprise_Project/aws_agentic_orchestrator/index_agent.html)
+
+<table border="0">
+  <tr>
+    <td align="center"><h3>AWS Orchestrator</h3></td>
+    <td align="center"><h3>Fine-tuned (LoRA) pipeline</h3></td>
+  </tr>
+  <tr>
+    <td><img width="430" height="725" alt="image" src="https://github.com/user-attachments/assets/9a1444ed-aabe-48b9-b0ad-7521ec1848d6" /></td>
+    <td><img width="430" height="725" alt="image" src="https://github.com/user-attachments/assets/607f16bc-912d-4a08-889c-7bd7bc85386f" /></td>
+  </tr>
+</table>
+
 
 ## 1. What this actually does
 
